@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>PostIT Project Problem Statement</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">PostIT Project Problem Statement</h1>
+</header>
+<h1 id="postit-project-problem-statement">PostIT – Project Problem
+Statement</h1>
+<h2 id="overview">Overview</h2>
+<p>Build <strong>PostIT</strong>, a full-stack social media web
+application using the <strong>MERN stack</strong> (MongoDB, Express.js,
+React, Node.js). The app allows registered users to log in, share short
+posts, like or unlike posts made by other users, and update their
+profile. The project covers the complete flow from database design to
+REST API development to React UI with global state management using
+Redux Toolkit.</p>
+<hr />
+<h2 id="technology-stack">Technology Stack</h2>
+<table>
+<colgroup>
+<col style="width: 21%" />
+<col style="width: 78%" />
+</colgroup>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Technology</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Frontend</td>
+<td>React, Redux Toolkit, React Router DOM, Reactstrap (Bootstrap)</td>
+</tr>
+<tr>
+<td>Backend</td>
+<td>Node.js, Express.js</td>
+</tr>
+<tr>
+<td>Database</td>
+<td>MongoDB Atlas (cloud) via Mongoose</td>
+</tr>
+<tr>
+<td>Form Validation</td>
+<td>React Hook Form + Yup</td>
+</tr>
+<tr>
+<td>Password Security</td>
+<td>bcrypt</td>
+</tr>
+<tr>
+<td>HTTP Client</td>
+<td>Axios</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="mongodb-collections-data-models">MongoDB Collections &amp; Data
+Models</h2>
+<h3 id="collection-userinfos-usermodel">Collection:
+<code>userInfos</code> — UserModel</h3>
+<p>Stores one document per registered user.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>name</td>
+<td>String</td>
+<td>Required</td>
+</tr>
+<tr>
+<td>email</td>
+<td>String</td>
+<td>Required, unique</td>
+</tr>
+<tr>
+<td>password</td>
+<td>String</td>
+<td>Required, stored as bcrypt hash</td>
+</tr>
+<tr>
+<td>profilePic</td>
+<td>String</td>
+<td>Optional, URL to profile image</td>
+</tr>
+</tbody>
+</table>
+<h3 id="collection-posts-postmodel">Collection: <code>posts</code> —
+PostModel</h3>
+<p>Stores one document per post. Uses Mongoose timestamps to auto-record
+<code>createdAt</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>postMsg</td>
+<td>String</td>
+<td>Required, the post content</td>
+</tr>
+<tr>
+<td>email</td>
+<td>String</td>
+<td>Required, email of the author</td>
+</tr>
+<tr>
+<td>likes.count</td>
+<td>Number</td>
+<td>Default 0, total like count</td>
+</tr>
+<tr>
+<td>likes.users</td>
+<td>[String]</td>
+<td>Array of user IDs who liked the post</td>
+</tr>
+<tr>
+<td>createdAt</td>
+<td>Date</td>
+<td>Auto-generated by Mongoose timestamps</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="rest-apis-serverindex.js">REST APIs —
+<code>server/index.js</code></h2>
+<p>The Express server runs on <strong>port 3001</strong> and connects to
+MongoDB Atlas on startup.</p>
+<table>
+<colgroup>
+<col style="width: 2%" />
+<col style="width: 10%" />
+<col style="width: 10%" />
+<col style="width: 77%" />
+</colgroup>
+<thead>
+<tr>
+<th>Method</th>
+<th>Endpoint</th>
+<th>Purpose</th>
+<th>Algorithm</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>POST</td>
+<td><code>/registerUser</code></td>
+<td>Register a new user</td>
+<td>Receive name/email/password → hash password with bcrypt (10 salt
+rounds) → save new UserModel document → return saved user</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/login</code></td>
+<td>Authenticate a user</td>
+<td>Receive email/password → find user by email → compare password to
+hash using bcrypt → return user object on success, error on failure</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/logout</code></td>
+<td>Log out a user</td>
+<td>Return a success message (session/token management can be extended
+here)</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/savePost</code></td>
+<td>Create a new post</td>
+<td>Receive postMsg/email → save new PostModel document → return saved
+post</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/getPosts</code></td>
+<td>Fetch all posts</td>
+<td>Find all posts sorted by <code>createdAt</code> descending (newest
+first) → return posts array and total count</td>
+</tr>
+<tr>
+<td>PUT</td>
+<td><code>/likePost/:postId</code></td>
+<td>Toggle like/unlike on a post</td>
+<td>Find post by ID → check if <code>userId</code> is in
+<code>likes.users</code> array → if yes: decrement count and remove
+userId (<code>$inc</code>, <code>$pull</code>) → if no: increment count
+and add userId (<code>$inc</code>, <code>$addToSet</code>) → return
+updated post</td>
+</tr>
+<tr>
+<td>PUT</td>
+<td><code>/updateUserProfile/:email</code></td>
+<td>Update user profile</td>
+<td>Find user by email → update name and profilePic → if password
+changed, hash the new one with bcrypt → save and return updated
+user</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="redux-store-storestore.js">Redux Store —
+<code>Store/store.js</code></h2>
+<p>Configure the Redux store using <code>configureStore</code> from
+Redux Toolkit. Register two reducers:</p>
+<ul>
+<li><code>users</code> → from <code>UserSlice</code></li>
+<li><code>posts</code> → from <code>PostSlice</code></li>
+</ul>
+<p>Wrap the entire React app in a
+<code>&lt;Provider store={store}&gt;</code> in <code>index.js</code> so
+all components can access the store.</p>
+<hr />
+<h2 id="redux-slice-1-userslice-featuresuserslice.js">Redux Slice 1:
+UserSlice — <code>Features/UserSlice.js</code></h2>
+<p><strong>State shape:</strong></p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>{ <span class="dt">user</span><span class="op">:</span> {}<span class="op">,</span> <span class="dt">isLoading</span><span class="op">:</span> <span class="kw">false</span><span class="op">,</span> <span class="dt">isSuccess</span><span class="op">:</span> <span class="kw">false</span><span class="op">,</span> <span class="dt">isError</span><span class="op">:</span> <span class="kw">false</span> }</span></code></pre></div>
+<h3 id="thunks-async-actions">Thunks (Async Actions)</h3>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 26%" />
+<col style="width: 47%" />
+</colgroup>
+<thead>
+<tr>
+<th>Thunk</th>
+<th>API Call</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>registerUser(userData)</code></td>
+<td>POST <code>/registerUser</code></td>
+<td>Sends name/email/password to server, returns new user</td>
+</tr>
+<tr>
+<td><code>login(userData)</code></td>
+<td>POST <code>/login</code></td>
+<td>Sends email/password, returns authenticated user object</td>
+</tr>
+<tr>
+<td><code>logout()</code></td>
+<td>POST <code>/logout</code></td>
+<td>Calls logout endpoint</td>
+</tr>
+<tr>
+<td><code>updateUserProfile(userData)</code></td>
+<td>PUT <code>/updateUserProfile/:email</code></td>
+<td>Sends updated name, password, profilePic</td>
+</tr>
+</tbody>
+</table>
+<h3 id="extra-reducers-state-changes-per-thunk-lifecycle">Extra Reducers
+(State Changes per Thunk Lifecycle)</h3>
+<p>Each thunk has three lifecycle cases — <code>pending</code>,
+<code>fulfilled</code>, <code>rejected</code>:</p>
+<ul>
+<li><strong>pending</strong> → set <code>isLoading: true</code>, reset
+<code>isError</code> and <code>isSuccess</code></li>
+<li><strong>fulfilled</strong> → store returned data in
+<code>state.user</code>, set <code>isLoading: false</code>,
+<code>isSuccess: true</code></li>
+<li><strong>rejected</strong> → set <code>isLoading: false</code>,
+<code>isError: true</code></li>
+<li>On <strong>logout fulfilled</strong> → clear <code>state.user</code>
+back to <code>{}</code></li>
+</ul>
+<hr />
+<h2 id="redux-slice-2-postslice-featurespostslice.js">Redux Slice 2:
+PostSlice — <code>Features/PostSlice.js</code></h2>
+<p><strong>State shape:</strong></p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>{ <span class="dt">posts</span><span class="op">:</span> []<span class="op">,</span> <span class="dt">comments</span><span class="op">:</span> []<span class="op">,</span> <span class="dt">likes</span><span class="op">:</span> [] }</span></code></pre></div>
+<h3 id="thunks">Thunks</h3>
+<table>
+<colgroup>
+<col style="width: 23%" />
+<col style="width: 27%" />
+<col style="width: 48%" />
+</colgroup>
+<thead>
+<tr>
+<th>Thunk</th>
+<th>API Call</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>savePost(postData)</code></td>
+<td>POST <code>/savePost</code></td>
+<td>Sends postMsg/email, returns the new post</td>
+</tr>
+<tr>
+<td><code>getPosts()</code></td>
+<td>GET <code>/getPosts</code></td>
+<td>Returns all posts sorted newest first</td>
+</tr>
+<tr>
+<td><code>likePost(postData)</code></td>
+<td>PUT <code>/likePost/:postId</code></td>
+<td>Sends postId/userId, returns updated post</td>
+</tr>
+</tbody>
+</table>
+<h3 id="extra-reducers">Extra Reducers</h3>
+<ul>
+<li><strong>savePost fulfilled</strong> → prepend the new post to the
+front of <code>state.posts</code> using <code>unshift</code></li>
+<li><strong>getPosts fulfilled</strong> → replace
+<code>state.posts</code> with the full array from the server</li>
+<li><strong>likePost fulfilled</strong> → find the post in
+<code>state.posts</code> by <code>_id</code> and update its
+<code>likes</code> property with the returned value</li>
+</ul>
+<hr />
+<h2 id="react-components">React Components</h2>
+<h3 id="app.js-root-component-router"><code>App.js</code> — Root
+Component &amp; Router</h3>
+<p><strong>Purpose:</strong> Defines all client-side routes and
+conditionally renders the Header.<br />
+<strong>Algorithm:</strong> Use <code>useSelector</code> to check if a
+user email exists in Redux state. If logged in, show
+<code>&lt;Header&gt;</code>. Define routes: <code>/</code> → Home,
+<code>/login</code> → Login, <code>/register</code> → Register,
+<code>/profile</code> → Profile.</p>
+<hr />
+<h3 id="index.js-app-entry-point"><code>index.js</code> — App Entry
+Point</h3>
+<p><strong>Purpose:</strong> Mounts the React app into the DOM.<br />
+<strong>Algorithm:</strong> Wrap <code>&lt;App&gt;</code> in
+<code>&lt;Provider store={store}&gt;</code> so all components can access
+the Redux store via <code>useSelector</code> and
+<code>useDispatch</code>.</p>
+<hr />
+<h3 id="header.js-navigation-bar"><code>Header.js</code> — Navigation
+Bar</h3>
+<p><strong>Purpose:</strong> Shows navigation links and the logged-in
+user’s name and email.<br />
+<strong>Algorithm:</strong> Use <code>useSelector</code> to get the user
+from Redux. Provide links to Home and Profile. On Logout click, dispatch
+the <code>logout</code> thunk and redirect to <code>/login</code> using
+<code>useNavigate</code>.</p>
+<hr />
+<h3 id="footer.js-page-footer"><code>Footer.js</code> — Page Footer</h3>
+<p><strong>Purpose:</strong> Display a simple copyright footer at the
+bottom of every page.</p>
+<hr />
+<h3 id="home.js-home-page-protected"><code>Home.js</code> — Home Page
+(Protected)</h3>
+<p><strong>Purpose:</strong> The main page shown after login — displays
+the user info panel, post creation area, and the posts feed.<br />
+<strong>Algorithm:</strong> Use <code>useSelector</code> to get email.
+Use <code>useEffect</code> to redirect to <code>/login</code> if no user
+is logged in. Render <code>&lt;User&gt;</code>,
+<code>&lt;SharePosts&gt;</code>, and <code>&lt;Posts&gt;</code> in a
+grid layout.</p>
+<hr />
+<h3 id="login.js-login-form"><code>Login.js</code> — Login Form</h3>
+<p><strong>Purpose:</strong> Allow a registered user to log in.<br />
+<strong>Algorithm:</strong></p>
+<ol type="1">
+<li>Manage <code>email</code> and <code>password</code> in local state
+with <code>useState</code>.</li>
+<li>On button click, dispatch the <code>login(userData)</code>
+thunk.</li>
+<li>Use <code>useEffect</code> watching <code>isSuccess</code> and
+<code>isError</code> from Redux state.</li>
+<li>On success → navigate to <code>/</code> (home). On error → stay on
+<code>/login</code> and show error message.</li>
+</ol>
+<hr />
+<h3 id="register.js-registration-form"><code>Register.js</code> —
+Registration Form</h3>
+<p><strong>Purpose:</strong> Allow a new user to create an account with
+validated inputs.<br />
+<strong>Algorithm:</strong></p>
+<ol type="1">
+<li>Use <code>react-hook-form</code> with <code>yupResolver</code>
+connecting the <code>userSchemaValidation</code> Yup schema.</li>
+<li>Yup rules: name required, valid email format, password 4–20 chars,
+confirmPassword must match password.</li>
+<li>On valid submit, dispatch <code>registerUser(userData)</code> thunk
+and redirect to <code>/login</code>.</li>
+</ol>
+<hr />
+<h3 id="profile.js-update-profile-protected"><code>Profile.js</code> —
+Update Profile (Protected)</h3>
+<p><strong>Purpose:</strong> Let the logged-in user update their name,
+password, and profile picture URL.<br />
+<strong>Algorithm:</strong></p>
+<ol type="1">
+<li>Pre-fill form fields from the Redux <code>user</code> object using
+<code>useState</code> initial values.</li>
+<li>On submit, validate that password and confirmPassword match.</li>
+<li>Dispatch <code>updateUserProfile(userData)</code> thunk with email
+(read-only), name, password, and profilePic.</li>
+<li>Redirect back to <code>/profile</code> after update.</li>
+</ol>
+<hr />
+<h3 id="user.js-user-info-panel"><code>User.js</code> — User Info
+Panel</h3>
+<p><strong>Purpose:</strong> Display the logged-in user’s profile
+picture, name, and email.<br />
+<strong>Algorithm:</strong> Use <code>useSelector</code> to read
+<code>name</code>, <code>email</code>, and <code>profilePic</code> from
+Redux. If <code>profilePic</code> is set, show it; otherwise show the
+default avatar image.</p>
+<hr />
+<h3 id="sharepost.js-create-a-post"><code>SharePost.js</code> — Create a
+Post</h3>
+<p><strong>Purpose:</strong> Provide a textarea for the user to type and
+submit a new post.<br />
+<strong>Algorithm:</strong></p>
+<ol type="1">
+<li>Manage <code>postMsg</code> in local state.</li>
+<li>On “PostIT” button click, validate that the message is not
+empty.</li>
+<li>Dispatch <code>savePost({ postMsg, email })</code> thunk.</li>
+<li>Clear the textarea after posting.</li>
+</ol>
+<hr />
+<h3 id="posts.js-posts-feed"><code>Posts.js</code> — Posts Feed</h3>
+<p><strong>Purpose:</strong> Display all posts with timestamps, like
+counts, and a like/unlike toggle button.<br />
+<strong>Algorithm:</strong></p>
+<ol type="1">
+<li>On component mount (<code>useEffect</code>), dispatch
+<code>getPosts()</code> to load all posts from the server.</li>
+<li>Render each post in a table row: show author email, relative time
+using <code>moment.js</code> (<code>fromNow()</code>), post message, and
+a thumbs-up icon with the like count.</li>
+<li>On like icon click, dispatch
+<code>likePost({ postId, userId })</code> thunk. The server toggles
+like/unlike automatically based on whether the user has already liked
+the post.</li>
+</ol>
+<hr />
+<h3
+id="uservalidations.js-form-validation-schema"><code>UserValidations.js</code>
+— Form Validation Schema</h3>
+<p><strong>Purpose:</strong> Define validation rules shared across
+Register (and optionally other) forms using Yup.</p>
+<table>
+<colgroup>
+<col style="width: 22%" />
+<col style="width: 77%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Rules</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>name</td>
+<td>Required string</td>
+</tr>
+<tr>
+<td>email</td>
+<td>Required, valid email format</td>
+</tr>
+<tr>
+<td>password</td>
+<td>Required, minimum 4 characters, maximum 20 characters</td>
+</tr>
+<tr>
+<td>confirmPassword</td>
+<td>Required, must match the <code>password</code> field exactly</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="application-flow-summary">Application Flow Summary</h2>
+<pre><code>User opens app
+  └─ Not logged in → redirect to /login
+       └─ Login success → navigate to / (Home)
+            ├─ SharePost: type message → PostIT → POST /savePost → new post added to feed
+            ├─ Posts: load all posts → GET /getPosts → display feed
+            │         click like → PUT /likePost/:id → toggle like in DB + update Redux
+            ├─ Header → Profile link → /profile → update name/password/pic → PUT /updateUserProfile
+            └─ Header → Logout → POST /logout → clear Redux user → redirect to /login
+  └─ No account → /register → fill form → validation → POST /registerUser → redirect to /login</code></pre>
+</body>
+</html>

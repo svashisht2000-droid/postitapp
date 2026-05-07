@@ -1,0 +1,1188 @@
+
+/* ============================================================
+   App.js
+   ============================================================ */
+import "./App.css";
+import Footer from "./Components/Footer";
+import Header from "./Components/Header";
+import Home from "./Components/Home";
+import "bootstrap/dist/css/bootstrap.min.css";
+import { Container, Row, Col } from "reactstrap";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Login from "./Components/Login";
+import Profile from "./Components/Profile";
+import Register from "./Components/Register";
+import User from "./Components/User";
+import { useSelector } from "react-redux";
+const App = () => {
+  const email = useSelector((state) => state.users.user?.email);
+  return (
+    <Container fluid>
+      <Router>
+        <Row>
+          {email ? (
+            <>
+              <Header />
+            </>
+          ) : null}
+        </Row>
+        <Row className="main">
+          <Routes>
+            <Route path="/" element={<Home />}></Route>
+            <Route path="/login" element={<Login />}></Route>
+            <Route path="/profile" element={<Profile />}></Route>
+            <Route path="/register" element={<Register />}></Route>
+          </Routes>
+        </Row>
+        <Row>
+          <Footer />
+        </Row>
+      </Router>
+    </Container>
+  );
+};
+export default App;
+
+/* ============================================================
+   Store/store.js
+   ============================================================ */
+import { configureStore } from '@reduxjs/toolkit';
+import usersReducer from "../Features/UserSlice";
+import postReducer from "../Features/PostSlice";
+export const store = configureStore({
+  reducer: {
+    users: usersReducer,
+    posts: postReducer,
+  },
+});
+
+/* ============================================================
+   Features/PostSlice.js
+   ============================================================ */
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import axios from "axios";
+const initialState = {
+  posts: [],
+  comments: [],
+  status: "idle",
+  error: null,
+};
+export const savePost = createAsyncThunk("posts/savePost", async (postData) => {
+  try {
+    const response = await axios.post("http://localhost:3001/savePost", {
+      postMsg: postData.postMsg,
+      email: postData.email,
+    });
+    const post = response.data.post;
+    return post;
+  } catch (error) {
+    console.log(error);
+  }
+});
+export const getPosts = createAsyncThunk("post/getPosts", async () => {
+  try {
+    const response = await axios.get("http://localhost:3001/getPosts");
+    console.log(response);
+    return response.data.posts;
+  } catch (error) {
+    console.log(error);
+  }
+});
+export const likePost = createAsyncThunk("posts/likePost", async (postData) => {
+  try {
+    const response = await axios.put(
+      `http://localhost:3001/likePost/${postData.postId}`,
+      {
+        userId: postData.userId,
+      },
+    );
+    const post = response.data.post;
+    return post;
+  } catch (error) {
+    console.log(error);
+  }
+});
+const postSlice = createSlice({
+  name: "posts",
+  initialState,
+  reducers: {},
+  extraReducers: (builder) => {
+    builder
+      .addCase(savePost.pending, (state) => {
+        state.status = "loading";
+      })
+      .addCase(savePost.fulfilled, (state, action) => {
+        console.log(action.payload);
+        state.status = "succeeded";
+        state.posts.unshift(action.payload);
+      })
+      .addCase(savePost.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.error.message;
+      });
+    builder.addCase(getPosts.pending, (state) => {
+        state.status = "loading";
+      })
+      .addCase(getPosts.fulfilled, (state, action) => {
+        state.status = "succeeded";
+        console.log(action.payload);
+        state.posts = action.payload;
+      })
+      .addCase(getPosts.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.error.message;
+      });
+    builder
+      .addCase(likePost.pending, (state) => {
+        state.status = "loading";
+      })
+      .addCase(likePost.fulfilled, (state, action) => {
+        state.status = "succeeded";
+        const updatedPostIndex = state.posts.findIndex(
+          (post) => post._id === action.payload._id
+        );
+        if (updatedPostIndex !== -1) {
+          state.posts[updatedPostIndex].likes = action.payload.likes;
+        }
+      })
+      .addCase(likePost.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.error.message;
+      });
+  },
+});
+export default postSlice.reducer;
+
+/* ============================================================
+   Features/UserSlice.js
+   ============================================================ */
+import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import axios from "axios";
+const initialState = {
+  user: {},
+  isLoading: false,
+  isSuccess: false,
+  isError: false,
+};
+export const registerUser = createAsyncThunk(
+  "users/registerUser",
+  async (userData) => {
+    try {
+      const response = await axios.post("http://localhost:3001/registerUser", {
+        name: userData.name,
+        email: userData.email,
+        password: userData.password,
+      });
+      console.log(response);
+      const user = response.data.user;
+      return user;
+    } catch (error) {
+      console.log(error);
+    }
+  },
+);
+export const login = createAsyncThunk("users/login", async (userData) => {
+  try {
+    const response = await axios.post("http://localhost:3001/login", {
+      email: userData.email,
+      password: userData.password,
+    });
+    const user = response.data.user;
+    console.log(response);
+    return user;
+  } catch (error) {
+    const errorMessage = "Invalid credentials";
+    alert(errorMessage);
+    throw new Error(errorMessage);
+  }
+});
+export const logout = createAsyncThunk("users/logout", async () => {
+  try {
+    await axios.post("http://localhost:3001/logout");
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+});
+export const updateUserProfile = createAsyncThunk(
+  "user/updateUserProfile",
+  async (userData) => {
+    try {
+      const formData = new FormData();
+      formData.append("email", userData.email);
+      formData.append("name", userData.name);
+      formData.append("password", userData.password);
+      if (userData.profilePic) {
+        formData.append("profilePic", userData.profilePic);
+      }
+      const response = await axios.put(
+        `http://localhost:3001/updateUserProfile/${userData.email}`,
+        formData,
+      );
+      const user = response.data.user;
+      return user;
+    } catch (error) {
+      console.log(error);
+      throw error;
+    }
+  },
+);
+export const userSlice = createSlice({
+  name: "users",
+  initialState,
+  reducers: {},
+  extraReducers: (builder) => {
+    builder.addCase(registerUser.pending, (state) => {
+      state.isLoading = true;
+      state.isError = false;
+      state.isSuccess = false;
+    });
+    builder.addCase(registerUser.fulfilled, (state, action) => {
+      state.isLoading = false;
+      state.isSuccess = true;
+    });
+    builder.addCase(registerUser.rejected, (state) => {
+      state.isLoading = false;
+      state.isError = true;
+    });
+    builder.addCase(login.pending, (state) => {
+      state.isLoading = true;
+      state.isError = false;
+      state.isSuccess = false;
+    });
+    builder.addCase(login.fulfilled, (state, action) => {
+      state.user = action.payload;
+      state.isLoading = false;
+      state.isSuccess = true;
+      state.isError = false;
+    });
+    builder.addCase(login.rejected, (state) => {
+      state.isLoading = false;
+      state.isError = true;
+      state.isSuccess = false;
+    });
+    builder.addCase(logout.pending, (state) => {
+      state.isLoading = true;
+      state.isError = false;
+      state.isSuccess = false;
+    });
+    builder.addCase(logout.fulfilled, (state) => {
+      state.user = {};
+      state.isLoading = false;
+      state.isSuccess = false;
+      state.isError = false;
+    });
+    builder.addCase(logout.rejected, (state) => {
+      state.isLoading = false;
+      state.isError = true;
+      state.isSuccess = false;
+    });
+    builder.addCase(updateUserProfile.pending, (state) => {
+      state.isLoading = true;
+      state.isError = false;
+      state.isSuccess = false;
+    });
+    builder.addCase(updateUserProfile.fulfilled, (state, action) => {
+      state.user = action.payload;
+      state.isLoading = false;
+      state.isSuccess = true;
+      state.isError = false;
+    });
+    builder.addCase(updateUserProfile.rejected, (state) => {
+      state.isLoading = false;
+      state.isError = true;
+      state.isSuccess = false;
+    });
+  },
+});
+export default userSlice.reducer;
+
+/* ============================================================
+   Components/Dept.js
+   ============================================================ */
+const Departments = () => {
+  return <div>Departments</div>;
+};
+export default Departments;
+
+/* ============================================================
+   Components/Footer.js
+   ============================================================ */
+const Footer = () => {
+  return (
+    <footer className="footer" style={{ textAlign: "center", padding: "10px", backgroundColor: "#f1f1f1" }}>
+      <div>Jasmin.Estudillo@utas.edu.om|©2024|PostIT|All Rights Reserved.</div>
+    </footer>
+  );
+};
+export default Footer;
+
+/* ============================================================
+   Components/Header.js
+   ============================================================ */
+import { Navbar, Nav, NavItem, NavLink } from "reactstrap";
+import logo from "../Images/logo-t.png";
+import { Link, useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { logout } from "../Features/UserSlice";
+const Header = () => {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const user = useSelector((state) => state.users.user);
+  const handlelogout = async () => {
+    await dispatch(logout());
+    navigate("/login");
+  };
+  return (
+    <>
+      <Navbar className="header">
+        <Nav>
+          <NavItem>
+            <Link>
+              <img src={logo} className="logo" />
+            </Link>
+          </NavItem>
+          <NavItem>
+            <Link to="/">Home</Link>
+          </NavItem>
+          <NavItem>
+            <Link to="/profile">Profile</Link>
+          </NavItem>
+          <NavItem>
+            <Link onClick={handlelogout}>Logout</Link>
+          </NavItem>
+          <NavItem></NavItem>
+        </Nav>
+        <span className="user-name" float="right">
+          Hello {user ? `${user.name} (${user.email})` : "Guest"}
+        </span>
+      </Navbar>
+    </>
+  );
+};
+export default Header;
+
+/* ============================================================
+   Components/Home.js
+   ============================================================ */
+import logo from "../Images/logo-t.png";
+import Posts from "./Posts";
+import SharePosts from "./SharePost";
+import User from "./User";
+import { Container, Row, Col } from "reactstrap";
+import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
+const Home = () => {
+  const email = useSelector((state) => state.users.user?.email);
+  const navigate = useNavigate();
+  useEffect(() => {
+    if (!email) {
+      navigate("/login");
+    }
+  }, [email, navigate]);
+  return (
+    <>
+      <Row>
+        <Col md={3}>
+          <User />
+        </Col>
+        <Col md={9}>
+          <SharePosts />
+        </Col>
+      </Row>
+      <Row>
+        <Col md={3}></Col>
+        <Col md={9}>
+          <Posts />
+        </Col>
+      </Row>
+    </>
+  );
+};
+export default Home;
+
+/* ============================================================
+   Components/ListUsers.js
+   ============================================================ */
+import { Form, FormGroup, Input, Label, Button, Container, Row, Col } from "reactstrap";
+import { useState } from "react";
+import { userSchemaValidation } from "../Validations/UserValidations";
+import * as yup from "yup";
+import { useForm } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import { useSelector, useDispatch } from "react-redux";
+import { addUser, deleteUser, updateUser } from "../Features/UserSlice";
+import { Link } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+const ListUsers = () => {
+  const userList = useSelector((state) => state.users.value);
+  const [name, setname] = useState("");
+  const [email, setemail] = useState("");
+  const [password, setpassword] = useState("");
+  const [confirmPassword, setconfirmPassword] = useState("");
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({
+    resolver: yupResolver(userSchemaValidation),
+  });
+  const handleDelete = (email) => {
+    dispatch(deleteUser(email));
+  };
+  const dispatch = useDispatch();
+  const handleUpdate = (email) => {
+    const userData = {
+      name: name,
+      email: email,
+      password: password,
+    };
+    dispatch(updateUser(userData));
+  };
+  return (
+    <Container fluid>
+      <Row>
+        <Col md={6}>
+          List of Users
+          <table>
+            <tbody>
+              {userList.map((user) => (
+                <tr key={user.email}>
+                  <td>{user.name}</td>
+                  <td>{user.email}</td>
+                  <td>{user.password}</td>
+                  <td>
+                    <Button onClick={() => handleDelete(user.email)}>
+                      Delete User
+                    </Button>
+                    <Link to={`/update/${user.email}/${user.name}/${user.password}`}>
+                      <Button color="primary">Update User</Button>
+                    </Link>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </Col>
+      </Row>
+    </Container>
+  );
+};
+export default ListUsers;
+
+/* ============================================================
+   Components/Location.js
+   ============================================================ */
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+const Location = () => {
+  const [locationData, setLocationData] = useState(null);
+  useEffect(() => {
+    const fetchLocation = async () => {
+      try {
+        const response = await axios.get("http://ip-api.com/json/");
+        setLocationData(response.data);
+      } catch (error) {
+        console.error("Error fetching location data:", error.message);
+      }
+    };
+    fetchLocation();
+  }, []);
+  return (
+    <div className="location">
+      <br />
+      {locationData ? (
+        <div>
+          <span>IP: {locationData.query}</span>
+          <br />
+          <span>City: {locationData.city}</span>
+          <br />
+          <span>Country: {locationData.country}</span>
+        </div>
+      ) : (
+        <p>Loading location...</p>
+      )}
+    </div>
+  );
+};
+export default Location;
+
+/* ============================================================
+   Components/Login.js
+   ============================================================ */
+import { Form, Input, FormGroup, Label, Container, Button, Col, Row } from "reactstrap";
+import logo from "../Images/logo-t.png";
+import { Link } from "react-router-dom";
+import { useState } from "react";
+import { useDispatch } from "react-redux";
+import { login } from "../Features/UserSlice";
+import { useSelector } from "react-redux";
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+const Login = () => {
+  const [email, setemail] = useState("saif@yahoo.com");
+  const [password, setpassword] = useState("Muscat123?");
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const user = useSelector((state) => state.users.user);
+  const isSuccess = useSelector((state) => state.users.isSuccess);
+  const isError = useSelector((state) => state.users.isError);
+  const isLoading = useSelector((state) => state.users.isLoading);
+  const handleLogin = () => {
+    const userData = {
+      email: email,
+      password: password,
+    };
+    dispatch(login(userData));
+  };
+  useEffect(() => {
+    if (isError) {
+      navigate("/login");
+    }
+    if (isSuccess) {
+      navigate("/home");
+    }
+  }, [user, isError, isSuccess]);
+  return (
+    <div>
+      <Container>
+        {isError && <p className="error">Login Failed. Please try again.</p>}{" "}
+        {isSuccess && <p className="success">Login Successful! Redirecting...</p>}{" "}
+        {isLoading && <p className="loading">Logging in...</p>}{" "}
+        <Form>
+          <Row>
+            <Col md={3}>
+              <img src={logo} alt="Logo" />
+            </Col>
+          </Row>
+          <Row>
+            <Col md={3}>
+              <FormGroup>
+                <Label for="email">Email</Label>{" "}
+                <Input
+                  id="email"
+                  name="email"
+                  value={email}
+                  type="email"
+                  onChange={(e) => setemail(e.target.value)}
+                />
+              </FormGroup>
+            </Col>
+          </Row>
+          <Row>
+            <Col md={3}>
+              <FormGroup>
+                <Label for="password">Password</Label>{" "}
+                <Input
+                  id="password"
+                  name="password"
+                  value={password}
+                  type="password"
+                  onChange={(e) => setpassword(e.target.value)}
+                />
+              </FormGroup>
+            </Col>
+          </Row>
+          <Row>
+            <Col md={3}>
+              <Button onClick={() => handleLogin()}>
+                {isLoading ? "Logging in..." : "Log In"}
+              </Button>
+            </Col>
+          </Row>
+        </Form>
+        <p className="smalltext">
+          No Account? <Link to="/register">Sign Up now.</Link>
+        </p>
+      </Container>
+    </div>
+  );
+};
+export default Login;
+
+/* ============================================================
+   Components/Posts.js
+   ============================================================ */
+import { useSelector, useDispatch } from "react-redux";
+import { Link, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { getPosts } from "../Features/PostSlice";
+import { Table } from "reactstrap";
+import moment from "moment";
+import { likePost } from "../Features/PostSlice";
+import { FaHeart, FaMountainSun, FaThumbsUp } from "react-icons/fa6";
+const Posts = () => {
+  const posts = useSelector((state) => state.posts.posts);
+  const email = useSelector((state) => state.users.user.email);
+  const userId = useSelector((state) => state.users.user._id);
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  useEffect(() => {
+    dispatch(getPosts());
+  }, []);
+  const handleLikePost = (postId) => {
+    const postData = {
+      postId: postId,
+      userId: userId,
+    };
+    dispatch(likePost(postData));
+    navigate("/");
+  };
+  return (
+    <div className="postsContainer">
+      <Table className="table table-striped">
+        <thead></thead>
+        <tbody>
+          {posts.map((post) => (
+            <tr key={post.id}>
+              <td>{post.email}</td>
+              <td>
+                <p> {moment(post.createdAt).fromNow()}</p>
+                {post.postMsg}
+                <p className="likes">
+                  <a href="#" onClick={() => handleLikePost(post._id)}>
+                    <FaThumbsUp />
+                  </a>
+                  ({post.likes.count})
+                </p>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </Table>
+    </div>
+  );
+};
+export default Posts;
+
+/* ============================================================
+   Components/Profile.js
+   ============================================================ */
+import { useSelector, useDispatch } from "react-redux";
+import { useState, useEffect } from "react";
+import User from "./User";
+import { updateUserProfile } from "../Features/UserSlice";
+import { useNavigate } from "react-router-dom";
+import { Form, FormGroup, Input, Label, Button, Container, Row, Col } from "reactstrap";
+const Profile = () => {
+  const user = useSelector((state) => state.users.user);
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const [userName, setUserName] = useState(user.name || "");
+  const [pwd, setPwd] = useState(user.password || "");
+  const [confirmPassword, setConfirmPassword] = useState(user.password || "");
+  const [profilePic, setProfilePic] = useState(user.profilePic || "");
+  const handleUpdate = async (event) => {
+    event.preventDefault();
+    if (pwd !== confirmPassword) {
+      alert("Passwords do not match.");
+      return;
+    }
+    const userData = {
+      email: user.email,
+      name: userName,
+      password: pwd,
+      profilePic: profilePic,
+    };
+    console.log(userData);
+    await dispatch(updateUserProfile(userData));
+    alert("Profile Updated.");
+    navigate("/profile");
+  };
+  useEffect(() => {
+    if (!user.email) {
+      navigate("/login");
+    }
+  }, [user.email, navigate]);
+  return (
+    <Container fluid>
+      <h1>Profile</h1>
+      <Row>
+        <Col md={2}>
+          <User />
+        </Col>
+        <Col md={4}>
+          Update Profile
+          <Form onSubmit={handleUpdate}>
+            <input
+              type="file"
+              name="profilePic"
+              onChange={(e) => setProfilePic(e.target.files[0])}
+            />
+            <div className="appTitle"></div>
+            <button color="primary" className="button">
+              Update Photo
+            </button>
+            <FormGroup>
+              <Label for="name">Name</Label>
+              <Input
+                id="name"
+                name="name"
+                placeholder="Name..."
+                type="text"
+                value={userName}
+                onChange={(e) => setUserName(e.target.value)}
+              />
+            </FormGroup>
+            <FormGroup>
+              <Label for="email">Email</Label>
+              <Input
+                id="email"
+                name="email"
+                placeholder="Email..."
+                type="email"
+                value={user?.email || ""}
+                disabled
+              />
+            </FormGroup>
+            <FormGroup>
+              <Label for="password">Password</Label>
+              <Input
+                id="password"
+                name="password"
+                placeholder="Password..."
+                type="password"
+                value={pwd}
+                onChange={(e) => setPwd(e.target.value)}
+              />
+            </FormGroup>
+            <FormGroup>
+              <Label for="confirmPassword">Confirm Password</Label>
+              <Input
+                id="confirmPassword "
+                name="confirmPassword"
+                placeholder="Confirm Password..."
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+              />
+            </FormGroup>
+            <FormGroup>
+              <Button color="primary" className="button">
+                Update Profile
+              </Button>
+            </FormGroup>
+          </Form>
+        </Col>
+      </Row>
+    </Container>
+  );
+};
+export default Profile;
+
+/* ============================================================
+   Components/Register.js
+   ============================================================ */
+import { Link } from "react-router-dom";
+import { Button, Container, Row, Col } from "reactstrap";
+import { useState } from "react";
+import { userSchemaValidation } from "../Validations/UserValidations";
+import * as yup from "yup";
+import { useForm } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import { useSelector, useDispatch } from "react-redux";
+import { registerUser } from "../Features/UserSlice";
+import { useNavigate } from "react-router-dom";
+const Register = () => {
+  const userList = useSelector((state) => state.users.value);
+  const [name, setname] = useState("");
+  const [email, setemail] = useState("");
+  const [password, setpassword] = useState("");
+  const [confirmPassword, setconfirmPassword] = useState("");
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({
+    resolver: yupResolver(userSchemaValidation),
+  });
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const onSubmit = (data) => {
+    try {
+      const userData = {
+        name: data.name,
+        email: data.email,
+        password: data.password,
+      };
+      console.log("Form Data", data);
+      alert("Validation all good.");
+      dispatch(registerUser(userData));
+      navigate("/login");
+    } catch (error) {
+      console.log("Error.");
+    }
+  };
+  return (
+    <Container fluid>
+      <Row className="formrow">
+        <Col className="columndiv1" lg="6">
+          <form className="div-form" onSubmit={handleSubmit(onSubmit)}>
+            <div className="appTitle"></div>
+            <section className="form">
+              <div className="form-group">
+                <input
+                  type="text"
+                  className="form-control"
+                  id="name"
+                  placeholder="Enter your name..."
+                  {...register("name", {
+                    onChange: (e) => setname(e.target.value),
+                  })}
+                />
+                <p className="error">{errors.name?.message}</p>
+              </div>
+              <div className="form-group">
+                <input
+                  type="text"
+                  className="form-control"
+                  id="email"
+                  placeholder="Enter your email..."
+                  {...register("email", {
+                    onChange: (e) => setemail(e.target.value),
+                  })}
+                />
+                <p className="error">{errors.email?.message}</p>
+              </div>
+              <div className="form-group">
+                <input
+                  type="password"
+                  className="form-control"
+                  id="password"
+                  placeholder="Enter your password..."
+                  {...register("password", {
+                    onChange: (e) => setpassword(e.target.value),
+                  })}
+                />
+                <p className="error">{errors.password?.message}</p>
+              </div>
+              <div className="form-group">
+                <input
+                  type="password"
+                  className="form-control"
+                  id="confirmPassword"
+                  placeholder="Confirm your password..."
+                  {...register("confirmPassword", {
+                    onChange: (e) => setconfirmPassword(e.target.value),
+                  })}
+                />
+                <p className="error">{errors.confirmPassword?.message}</p>
+              </div>
+              <Button color="primary" className="button">
+                Register
+              </Button>
+            </section>
+            <p className="smalltext">
+              Already Registered? <Link to="/login">Login </Link>
+            </p>
+          </form>
+        </Col>
+        <Col className="columndiv2" lg="6"></Col>
+      </Row>
+    </Container>
+  );
+};
+export default Register;
+
+/* ============================================================
+   Components/SharePost.js
+   ============================================================ */
+import { useSelector, useDispatch } from "react-redux";
+import { useState } from "react";
+import { savePost } from "../Features/PostSlice";
+import { Button, Col, Container, Row, Input } from "reactstrap";
+const SharePosts = () => {
+  const [postMsg, setpostMsg] = useState("");
+  const dispatch = useDispatch();
+  const email = useSelector((state) => state.users.user.email);
+  const handlePost = async () => {
+    if (!postMsg.trim()) {
+      alert("Post message is required.");
+      return;
+    }
+    const postData = {
+      postMsg: postMsg,
+      email: email,
+    };
+    dispatch(savePost(postData));
+    setpostMsg("");
+  };
+  return (
+    <Container>
+      <Row>
+        <Col>
+          <Input
+            id="share"
+            name="share"
+            placeholder="Share your thoughts..."
+            type="textarea"
+            value={postMsg}
+            onChange={(e) => setpostMsg(e.target.value)}
+          />
+          <br /> <Button onClick={() => handlePost()}> PostIT</Button>
+        </Col>
+      </Row>
+    </Container>
+  );
+};
+export default SharePosts;
+
+/* ============================================================
+   Components/User.js
+   ============================================================ */
+import userDefaultImage from "../Images/user.png";
+import { useSelector } from "react-redux";
+import Location from "./Location";
+const User = () => {
+  const email = useSelector((state) => state.users.user.email);
+  const name = useSelector((state) => state.users.user.name);
+  const profilePic = useSelector((state) => state.users.user.profilePic);
+  const picURL = profilePic
+    ? "http://localhost:3001/uploads/" + profilePic
+    : userDefaultImage;
+  return (
+    <div>
+      <img src={picURL} className="userImage" alt="User" />
+      <p>
+        <b>{name}</b>
+        <br />
+        {email}
+        <Location/>
+      </p>
+    </div>
+  );
+};
+export default User;
+
+/* ============================================================
+   server/Models/UserModel.js
+   ============================================================ */
+import mongoose from "mongoose";
+const UserSchema = mongoose.Schema({
+  name: {
+    type: String,
+    required: true,
+  },
+  email: {
+    type: String,
+    required: true,
+    unique: true,
+  },
+  password: {
+    type: String,
+    required: true,
+  },
+  profilePic: {
+    type: String,
+  },
+});
+const UserModel = mongoose.model("userInfos", UserSchema);
+export default UserModel;
+
+/* ============================================================
+   server/Models/Posts.js
+   ============================================================ */
+import mongoose from "mongoose";
+const PostSchema = mongoose.Schema(
+  {
+    postMsg: {
+      type: String,
+      required: true,
+    },
+    email: {
+      type: String,
+      required: true,
+    },
+    likes: {
+      count: {
+        type: Number,
+        default: 0,
+      },
+      users: {
+        type: [String],
+        default: [],
+      },
+    },
+  },
+  {
+    timestamps: {
+      createdAt: true,
+      updatedAt: false,
+    },
+  }
+);
+const PostModel = mongoose.model("posts", PostSchema);
+export default PostModel;
+
+/* ============================================================
+   server/index.js
+   ============================================================ */
+import express from "express";
+import mongoose from "mongoose";
+import cors from "cors";
+import UserModel from "./Models/UserModel.js";
+import PostModel from "./Models/Posts.js";
+import bcrypt from "bcrypt";
+import multer from "multer";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+import { dirname } from "path";
+const app = express();
+app.use(express.json());
+app.use(cors());
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+app.use("/uploads", express.static(__dirname + "/uploads"));
+const connectString =
+  "mongodb+srv://admin:Muscat123@postitcluster.rjk7gw9.mongodb.net/userInfos?appName=PostITCluster";
+app.listen(3001, () => {
+  console.log("You are connected to web server");
+});
+mongoose.connect(connectString).then(() => {
+  console.log("Web Server connected to mongodb");
+});
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "uploads/");
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + "-" + file.originalname);
+  },
+});
+const upload = multer({ storage: storage });
+app.post("/registerUser", async (req, res) => {
+  try {
+    const name = req.body.name;
+    const email = req.body.email;
+    const password = req.body.password;
+    const hashedpassword = await bcrypt.hash(password, 10);
+    const user = new UserModel({
+      name: name,
+      email: email,
+      password: hashedpassword,
+    });
+    await user.save();
+    res.send({ user: user, msg: "Added." });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: "An error occurred" });
+  }
+});
+app.post("/login", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    const user = await UserModel.findOne({ email: email });
+    if (!user) {
+      return res.status(500).json({ error: "User not found." });
+    }
+    console.log(user);
+    const passwordMatch = await bcrypt.compare(password, user.password);
+    if (!passwordMatch) {
+      return res.status(401).json({ error: "Authentication failed" });
+    }
+    res.status(200).json({ user, message: "Success." });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+app.post("/logout", async (req, res) => {
+  res.status(200).json({ message: "Logged out successfully" });
+});
+app.post("/savePost", async (req, res) => {
+  try {
+    const postMsg = req.body.postMsg;
+    const email = req.body.email;
+    const post = new PostModel({
+      postMsg: postMsg,
+      email: email,
+    });
+    await post.save();
+    res.send({ post: post, msg: "Added." });
+  } catch (error) {
+    res.status(500).json({ error: "An error occurred" });
+  }
+});
+app.get("/getPosts", async (req, res) => {
+  try {
+    const posts = await PostModel.find({}).sort({ createdAt: -1 });
+    const countPost = await PostModel.countDocuments({});
+    res.send({ posts: posts, count: countPost });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "An error occurred" });
+  }
+});
+app.put("/likePost/:postId/", async (req, res) => {
+  const postId = req.params.postId;
+  const userId = req.body.userId;
+  try {
+    const postToUpdate = await PostModel.findOne({ _id: postId });
+    if (!postToUpdate) {
+      return res.status(404).json({ msg: "Post not found." });
+    }
+    const userIndex = postToUpdate.likes.users.indexOf(userId);
+    if (userIndex !== -1) {
+      const updatedPost = await PostModel.findOneAndUpdate(
+        { _id: postId },
+        {
+          $inc: { "likes.count": -1 },
+          $pull: { "likes.users": userId },
+        },
+        { new: true },
+      );
+      res.json({ post: updatedPost, msg: "Post unliked." });
+    } else {
+      const updatedPost = await PostModel.findOneAndUpdate(
+        { _id: postId },
+        {
+          $inc: { "likes.count": 1 },
+          $addToSet: { "likes.users": userId },
+        },
+        { new: true },
+      );
+      res.json({ post: updatedPost, msg: "Post liked." });
+    }
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "An error occurred" });
+  }
+});
+app.put("/updateUserProfile/:email/", upload.single("profilePic"), async (req, res) => {
+  const email = req.params.email;
+  const name = req.body.name;
+  const password = req.body.password;
+  try {
+    const userToUpdate = await UserModel.findOne({ email: email });
+    if (!userToUpdate) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    let profilePic = null;
+    if (req.file) {
+      profilePic = req.file.filename;
+      if (userToUpdate.profilePic) {
+        const oldFilePath = path.join(__dirname, "uploads", userToUpdate.profilePic);
+        fs.unlink(oldFilePath, (err) => {
+          if (err) {
+            console.error("Error deleting file:", err);
+          } else {
+            console.log("Old file deleted successfully");
+          }
+        });
+      }
+      userToUpdate.profilePic = profilePic;
+    }
+    userToUpdate.name = name;
+    if (password !== userToUpdate.password) {
+      const hashedpassword = await bcrypt.hash(password, 10);
+      userToUpdate.password = hashedpassword;
+    } else {
+      userToUpdate.password = password;
+    }
+    await userToUpdate.save();
+    res.send({ user: userToUpdate, msg: "Updated." });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
