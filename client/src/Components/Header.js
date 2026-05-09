@@ -29,6 +29,12 @@ const Header = () => {
             <Link to="/profile">Profile</Link>
           </NavItem>
           <NavItem>
+            <Link to="/attendance">Attendance</Link>
+          </NavItem>
+          <NavItem>
+            <Link to="/courses">Courses</Link>
+          </NavItem>
+          <NavItem>
             <Link onClick={handlelogout}>Logout</Link>
           </NavItem>
           <NavItem></NavItem>

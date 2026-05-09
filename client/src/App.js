@@ -9,6 +9,8 @@ import Login from "./Components/Login";
 import Profile from "./Components/Profile";
 import Register from "./Components/Register";
 import User from "./Components/User";
+import Attendance from "./Components/Attendance";
+import Courses from "./Components/Courses";
 import { useSelector } from "react-redux";
 
 const App = () => {
@@ -30,6 +32,8 @@ const App = () => {
             <Route path="/login" element={<Login />}></Route>
             <Route path="/profile" element={<Profile />}></Route>
             <Route path="/register" element={<Register />}></Route>
+            <Route path="/attendance" element={<Attendance />}></Route>
+            <Route path="/courses" element={<Courses />}></Route>
           </Routes>
         </Row>
         <Row>

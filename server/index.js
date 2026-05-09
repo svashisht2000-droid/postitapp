@@ -3,20 +3,44 @@ import mongoose from "mongoose";
 import cors from "cors";
 import UserModel from "./Models/UserModel.js";
 import PostModel from "./Models/Posts.js";
+import ClassModel from "./Models/ClassModel.js";
+import CoursesModel from "./Models/CoursesModel.js";
 import bcrypt from "bcrypt";
+
 const app = express();
 app.use(express.json());
 app.use(cors());
+
 const connectString =
   "mongodb+srv://admin:Muscat123@postitcluster.rjk7gw9.mongodb.net/userInfos?appName=PostITCluster";
+const PORT = Number(process.env.PORT) || 3001;
 
-app.listen(3001, () => {
-  console.log("You are connected to web server");
-});
+const startServer = async () => {
+  try {
+    await mongoose.connect(connectString);
+    console.log("Web Server connected to mongodb");
 
-mongoose.connect(connectString).then(() => {
-  console.log("Web Server connected to mongodb");
-});
+    const server = app.listen(PORT, () => {
+      console.log(`You are connected to web server on port ${PORT}`);
+    });
+
+    server.on("error", (err) => {
+      if (err.code === "EADDRINUSE") {
+        console.error(
+          `Port ${PORT} is already in use. Stop the existing process and restart the server.`,
+        );
+      } else {
+        console.error("Server startup error:", err.message);
+      }
+      process.exit(1);
+    });
+  } catch (err) {
+    console.error("MongoDB connection failed:", err.message);
+    process.exit(1);
+  }
+};
+
+startServer();
 
 app.post("/registerUser", async (req, res) => {
   try {
@@ -124,7 +148,7 @@ app.put("/likePost/:postId/", async (req, res) => {
 app.put("/updateUserProfile/:email/", async (req, res) => {
   const email = req.params.email;
   const name = req.body.name;
-  const password = req.body.password;  // this is hashed password.(unsafe)
+  const password = req.body.password; // this is hashed password.(unsafe)
   try {
     const userToUpdate = await UserModel.findOne({ email: email });
     if (!userToUpdate) {
@@ -132,8 +156,7 @@ app.put("/updateUserProfile/:email/", async (req, res) => {
     }
 
     userToUpdate.name = name;
-    if (password !== userToUpdate.password)
-    {
+    if (password !== userToUpdate.password) {
       const hashedpassword = await bcrypt.hash(password, 10);
       userToUpdate.password = hashedpassword;
     } else {
@@ -141,6 +164,138 @@ app.put("/updateUserProfile/:email/", async (req, res) => {
     }
     await userToUpdate.save();
     res.send({ user: userToUpdate, msg: "Updated." });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+/*API to fetch class list with student name */
+app.get("/getclasslist", async (req, res) => {
+  try {
+    // Run an aggregation on classlists collection (ClassModel).
+    // Goal: return each class record with studentid and student name.
+    const classList = await ClassModel.aggregate([
+      // 0) Limit initial results for performance while testing the join logic.
+      // In production, consider pagination or filtering by semester/course.
+      {
+        $limit: 100,
+      },
+      // 1) Join each class record with students collection.
+      // Maps: classlists.studentid -> students.sid
+      // Using direct field mapping for performance (no expensive transformations).
+      {
+        $lookup: {
+          from: "students",
+          localField: "studentid",
+          foreignField: "sid",
+          as: "studentInfo",
+        },
+      },
+      // 2) Create a top-level field sname for easier frontend usage.
+      // Prefer sname from students collection, otherwise fallback to name field.
+      {
+        $addFields: {
+          sname: {
+            $ifNull: [
+              { $arrayElemAt: ["$studentInfo.sname", 0] },
+              { $ifNull: [{ $arrayElemAt: ["$studentInfo.name", 0] }, ""] },
+            ],
+          },
+        },
+      },
+      // 3) Return only the fields required by the table.
+      // This keeps API response small and easy to consume.
+      {
+        $project: {
+          _id: 1,
+          studentid: 1,
+          coursecode: 1,
+          sem: 1,
+          section: 1,
+          teacherid: 1,
+          sname: 1,
+        },
+      },
+    ]);
+
+    // Send successful response with final array.
+    res.status(200).json({ classList });
+  } catch (err) {
+    // If any DB/pipeline step fails, send error details.
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/*API to fetch all courses */
+app.get("/getcourses", async (req, res) => {
+  try {
+    const department = String(req.query.department || "").trim();
+    const filter = {};
+
+    if (department) {
+      filter.department = department;
+    }
+
+    const courses = await CoursesModel.find(filter).sort({
+      department: 0,
+      level: 1,
+      specialisation: 1,
+    });
+    res.status(200).json({ courses });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/*API to fetch unique course departments */
+app.get("/getcoursedepartments", async (req, res) => {
+  try {
+    const rawDepartments = await CoursesModel.distinct("department");
+    const departments = rawDepartments
+      .map((item) => String(item || "").trim())
+      .filter((item) => item.length > 0)
+      .sort((a, b) => a.localeCompare(b));
+
+    res.status(200).json({ departments });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/*API to add a new course */
+app.post("/addcourse", async (req, res) => {
+  try {
+    const {
+      courseid,
+      coursename,
+      specialisation,
+      level,
+      offeredby,
+      thrs,
+      phrs,
+      pgrade,
+      pmark,
+      pgradepoint,
+      cstatus,
+      department,
+    } = req.body;
+
+    const course = new CoursesModel({
+      courseid,
+      coursename,
+      specialisation,
+      level,
+      offeredby,
+      thrs,
+      phrs,
+      pgrade,
+      pmark,
+      pgradepoint,
+      cstatus,
+      department,
+    });
+
+    await course.save();
+    res.status(201).json({ course, msg: "Added." });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
